@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import random
 
 class Bandit:
-  def __init__(self, k=10, eps=0.2, lr=0.1, ucb=False, c=2):
+  def __init__(self, k=10, eps=0.2, lr=0.1, ucb=False, soft_max=False, c=2):
     """
     k: the number of bandits
     eps: e-greedy parameter
@@ -22,6 +22,9 @@ class Bandit:
     self.ucb = ucb
     self.times = 0
     self.c = c
+    #for softmax action selection
+    self.soft_max = soft_max
+
     #columns: Observation and avg reward
     self.record = np.zeros((self.k, 2))
 
@@ -46,7 +49,16 @@ class Bandit:
     #update observations
     self.record[action, 0] += 1
   
+  def softmax(self, av, tau=1.12):
+    softm = np.exp(av/tau)/np.sum(np.exp(av/tau))
+    return softm
+
   def choose_action(self):
+    if self.soft_max:
+      p = self.softmax(self.record[:, 1], tau=0.7)
+      action = np.random.choice(np.arange(self.k), p=p)  
+      return action
+
     #explore
     if random.random() > self.eps:
       action=np.random.randint(self.k)
@@ -83,5 +95,5 @@ class Bandit:
     ax.scatter(np.arange(len(rewards)), rewards)
     plt.show()
 
-bandit = Bandit(k=10, ucb=True)
+bandit = Bandit(k=10, soft_max=True)
 bandit.play()
