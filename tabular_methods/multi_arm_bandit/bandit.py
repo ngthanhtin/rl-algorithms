@@ -15,11 +15,14 @@ class Bandit:
     self.k = k
     self.eps = eps
     self.lr = lr
+    self.initial_values = [] #optimistic initial value of each arm
+    for i in range(self.k):
+      self.initial_values.append(np.random.randn() + 1) #normal distribution
     self.ucb = ucb
     self.c = c
     #columns: Observation and avg reward
     self.record = np.zeros((self.k, 2))
-  
+
   def get_reward(self, prob, n=10):
     """
     define reward distribution for an arm
@@ -62,6 +65,7 @@ class Bandit:
       else:
         action = np.random.randint(self.k)
       r = self.get_reward(probs[action])
+      r += self.initial_values[action]
       self.update_record(action, r)
       mean_reward = ((i+1)*rewards[-1] + r)/(i+2)
       rewards.append(mean_reward)
@@ -71,7 +75,6 @@ class Bandit:
     ax.set_ylabel("Avg Reward")
     fig.set_size_inches(9,5)
     ax.scatter(np.arange(len(rewards)), rewards)
-
 
 bandit = Bandit(k=10)
 bandit.play()
