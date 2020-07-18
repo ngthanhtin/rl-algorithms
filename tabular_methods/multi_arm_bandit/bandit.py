@@ -38,9 +38,11 @@ class Bandit:
     return reward
   
   def update_record(self, action, r):
-    #update avg reward
-    new_r = (self.record[action, 0] * self.record[action, 1] + r) / (self.record[action, 0]+1)
-    self.record[action, 1] = new_r
+    #update avg reward using incremental formula
+    self.record[action, 1] += self.lr*(r-self.record[action, 1])
+    #update avg reward using original fomular
+    # new_avg_reward = (self.record[action, 0] * self.record[action, 1] + r) / (self.record[action, 0]+1)
+    # self.record[action, 1] = new_avg_reward
     #update observations
     self.record[action, 0] += 1
   
@@ -67,7 +69,7 @@ class Bandit:
     for i in range(500):
       action = self.choose_action()
       r = self.get_reward(probs[action])
-      r += self.initial_values[action]
+      r += self.initial_values[action] #optimistic initial value
       self.update_record(action, r)
 
       mean_reward = ((i+1)*rewards[-1] + r)/(i+2)
