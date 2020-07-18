@@ -18,7 +18,9 @@ class Bandit:
     self.initial_values = [] #optimistic initial value of each arm
     for i in range(self.k):
       self.initial_values.append(np.random.randn() + 1) #normal distribution
+    #for ucb
     self.ucb = ucb
+    self.times = 0
     self.c = c
     #columns: Observation and avg reward
     self.record = np.zeros((self.k, 2))
@@ -41,32 +43,33 @@ class Bandit:
     self.record[action, 1] = new_r
     #update observations
     self.record[action, 0] += 1
-    
-  def get_best_arm(self):
-    #choose action
-    arm_index = np.argmax(self.record[:, 1], axis=0)
-    return arm_index
   
   def choose_action(self):
-    #exploit
-    if random.random() < self.eps:
-      action=self.get_best_arm()
     #explore
-    else:
+    if random.random() > self.eps:
       action=np.random.randint(self.k)
+    #exploit
+    else:
+      if self.ucb:
+        if self.times == 0:
+          action = np.random.randint(self.k)
+        else:
+          confidence_bound = self.record[:, 1] + self.c*np.sqrt(np.log(self.times)/(self.action_times+0.1))
+          action = np.argmax(confidence_bound)
+      else:
+        action=np.argmax(self.record[:, 1], axis=0)
 
     return action
+
   def play(self):
     rewards = [0]
     probs = np.random.rand(self.k) # random reward probabilities of each arm
     for i in range(500):
-      if random.random() < self.eps:
-        action = self.get_best_arm()
-      else:
-        action = np.random.randint(self.k)
+      action = self.choose_action()
       r = self.get_reward(probs[action])
       r += self.initial_values[action]
       self.update_record(action, r)
+
       mean_reward = ((i+1)*rewards[-1] + r)/(i+2)
       rewards.append(mean_reward)
 
