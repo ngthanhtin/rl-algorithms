@@ -56,7 +56,7 @@ class Bandit:
         if self.times == 0:
           action = np.random.randint(self.k)
         else:
-          confidence_bound = self.record[:, 1] + self.c*np.sqrt(np.log(self.times)/(self.action_times+0.1))
+          confidence_bound = self.record[:, 1] + self.c*np.sqrt(np.log(self.times)/(self.times+0.1))
           action = np.argmax(confidence_bound)
       else:
         action=np.argmax(self.record[:, 1], axis=0)
@@ -68,6 +68,7 @@ class Bandit:
     probs = np.random.rand(self.k) # random reward probabilities of each arm
     for i in range(500):
       action = self.choose_action()
+      self.times += 1 #update for ucb
       r = self.get_reward(probs[action])
       r += self.initial_values[action] #optimistic initial value
       self.update_record(action, r)
@@ -80,6 +81,7 @@ class Bandit:
     ax.set_ylabel("Avg Reward")
     fig.set_size_inches(9,5)
     ax.scatter(np.arange(len(rewards)), rewards)
+    plt.show()
 
-bandit = Bandit(k=10)
+bandit = Bandit(k=10, ucb=True)
 bandit.play()
